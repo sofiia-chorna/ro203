@@ -35,7 +35,7 @@ function readInputFile(inputFile::String)
     close(datafile)
     
     n = length(split(data[1], ","))
-    t = Vector{Int64}(undef, n, n)
+    t = zeros(Int64, n, n)  # Initialize the matrix with zeros
 
     lineNb = 1
 
@@ -44,15 +44,18 @@ function readInputFile(inputFile::String)
 
         lineSplit = split(line, ",")
 
-        if size(lineSplit, 1) == n
+        # Check if the line has the correct number of values
+        if length(lineSplit) == n
             for colNb in 1:n
-
+                # Convert non-empty values to integers
                 if lineSplit[colNb] != " "
                     t[lineNb, colNb] = parse(Int64, lineSplit[colNb])
                 else
                     t[lineNb, colNb] = 0
                 end
             end
+        else
+            error("Invalid input file format: Line $lineNb has incorrect number of values")
         end 
         
         lineNb += 1
@@ -61,6 +64,7 @@ function readInputFile(inputFile::String)
     return t
 
 end
+
 
 """
 Display a grid represented by a 2-dimensional array

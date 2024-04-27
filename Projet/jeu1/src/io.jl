@@ -17,14 +17,40 @@ function readInputFile(inputFile::String)
 
     data = readlines(datafile)
     close(datafile)
+    
+    n = length(split(data[1], ","))
+    t = zeros(String, n, n)
+
+    lineNb = 1
 
     # For each line of the input file
     for line in data
+        # Read line
+        lineSplit = split(line, ",")
 
-        # TODO
-        println("In file io.jl, in method readInputFile(), TODO: read a line of the input file")
+        # Check if the line has the correct number of values
+        if length(lineSplit) == n
+            for colNb in 1:n
+                # Take value
+                element = lineSplit[colNb]
 
+                # Convert non-empty values to integers
+                if element == " "
+                    t[lineNb, colNb] = "0"
+                elseif element != "/" && element != "\\"
+                    t[lineNb, colNb] = parse(Int64, element)
+                else
+                    t[lineNb, colNb] = element
+                end
+            end
+        else
+            error("Invalid input file format: Line $lineNb has incorrect number of values")
+        end 
+        
+        lineNb += 1
     end
+
+    return t
 
 end
 
