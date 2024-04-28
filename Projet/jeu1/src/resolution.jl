@@ -6,36 +6,6 @@ include("generation.jl")
 
 TOL = 0.00001
 
-GHOST = 1
-VAMPIRE = 2
-ZOMBIE = 3
-
-function monsterType(k::Int)
-    if k == GHOST
-        return "G"  # Ghost
-    elseif k == VAMPIRE
-        return "V"  # Vampire
-    else
-        return "Z"  # Zombie
-    end
-end
-
-
-function canBeSeen(monsterType::Int, isReflected::Bool)
-    # Vampire is visible unless reflected
-    isVampireVisible = monsterType != VAMPIRE || !isReflected
-
-    # Ghost is visible only if reflected
-    isGhostVisible = monsterType != GHOST || isReflected
-
-    # Zombie is visible always
-    isZombie = monsterType == ZOMBIE
-
-    # Get the visibility of the monster
-    return isVampireVisible || isGhostVisible || isZombie
-end
-
-
 """
 Solve a sudoku grid with CPLEX
 
