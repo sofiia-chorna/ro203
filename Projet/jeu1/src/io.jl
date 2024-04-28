@@ -61,6 +61,12 @@ function readInputFile(inputFile::String)
     return UndeadProblem(dimensions, gridLayout, totalZombies, totalGhosts, totalVampires, paths, pathValues)
 end
 
+struct Cell
+    x::Int64
+    y::Int64
+    mirror::Bool
+end
+
 function isOutOfBounds(cell::Cell, dimensions::Array{Int64})
     return cell.x < 1 || cell.x > dimensions[1] || cell.y < 1 || cell.y > dimensions[2]
 end

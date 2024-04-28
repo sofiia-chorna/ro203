@@ -47,64 +47,68 @@ Return
 - x: 3-dimensional variables array such that x[i, j, k] = 1 if cell (i, j) has value k
 - getsolvetime(m): resolution time in seconds
 """
-function cplexSolve(tuple::Tuple{Matrix{String}, Vector{Int64}})
-    t, creatures = tuple
-    n = size(t, 1) - 2 # substract two as it is the contraints values
-    println(n)
-
-    # Extract number of each creature
-    ghostNb, vampireNb, zombieNb = creatures
+function cplexSolve(inst::UndeadProblem)
+    # Extract instance attributes
+    N = inst.dimensions
+    Z = inst.totalZombies
+    G = inst.totalGhosts
+    V = inst.totalVampires
+    C = inst.paths
+    visibleMonsters = inst.visibleMonsters
 
     # Create the model
-    m = Model(CPLEX.Optimizer)
+    model = Model(CPLEX.Optimizer)
 
-    @variable(m, x[1:n, 1:n, 1:n], Bin)
+    # Declare the variable
+    @variable(model, x[1:N[1], 1:N[2], 1:5], Bin)
 
-    # Each cell (i, j) has one value type of monsters
-    @constraint(m, [i in 1:n, j in 1:n], sum(x[i, j, k] for k in 1:3) == 1)
-
-    # Creatures number limitation
-    @constraint(m, sum(x[i, j, GHOST] for i in 1:n, j in 1:n) == ghostNb)
-    @constraint(m, sum(x[i, j, VAMPIRE] for i in 1:n, j in 1:n) == vampireNb)
-    @constraint(m, sum(x[i, j, ZOMBIE] for i in 1:n, j in 1:n) == zombieNb)
-
-    # Visibility limitation
-    # for i in 1:n, j in 1:n
-    #     visibleMonsters = 0
-    
-    #     # Iterate over row/column elements
-    #     for k in 1:n
-    #         # Check visibility based on the type of monster and presence of mirrors
-    #         if canBeSeen(t[i, k], mirrorPresent)
-    #             visibleMonsters += 1
-    #         end
-    #     end
-    
-    #     # Constraint to enforce visibility
-    #     @constraint(m, visibleMonsters == clue_value)
-    # end
-
-    # Start a chronometer
-    start = time()
-
-    # Solve the model
-    optimize!(m)
-
-    # Extract the solution
-    solution = Array{String}(undef, n, n)
-    for i in 1:n, j in 1:n
-        for k in 1:3
-            if value(x[i, j, k]) > 0.5
-                solution[i, j] = monsterType(k)
-                break
+    # Constraint on mirrors placed on the grid
+    for i in 1:N[1]
+        for j in 1:N[2]
+            if inst.grid[i,j] == 4 || inst.grid[i,j] == 5
+                @constraint(model, x[i,j,inst.grid[i,j]] == 1)
             end
         end
     end
 
-    # Return:
-    # 1 - true if an optimum is found
-    # 2 - the resolution time
-    return primal_status(m) == MOI.FEASIBLE_POINT, x, time() - start
+    # Constraint on the uniqueness of the type of box
+    @constraint(model, [i = 1:N[1], j = 1:N[2]], sum(x[i,j,k] for k in 1:5) == 1)
+    
+    # Constraint on the number of monsters per type
+    @constraint(model, sum(x[i,j,1] for i = 1:N[1], j = 1:N[2]) == G)
+    @constraint(model, sum(x[i,j,2] for i = 1:N[1], j = 1:N[2]) == Z)
+    @constraint(model, sum(x[i,j,3] for i = 1:N[1], j = 1:N[2]) == V)
+
+    # Constraint on the number of monsters per path
+    for c in 1:size(C, 1)
+        sumZombies = sum(x[C[c][el][1], C[c][el][2], 2] for el in 1:size(C[c], 1))
+        sumVampires = sum(x[C[c][el][1], C[c][el][2], 3] * C[c][el][3] for el in 1:size(C[c], 1))
+        sumGhosts = sum(x[C[c][el][1], C[c][el][2], 1] * (1 - C[c][el][3]) for el in 1:size(C[c], 1))
+        @constraint(model, sumZombies + sumVampires + sumGhosts == visibleMonsters[c])
+    end
+
+    # Start a timer
+    startTime = time()
+
+    # Solve the model
+    optimize!(model)
+    
+    # Update the grid layout with the solution
+    solution = JuMP.value.(x)
+    for i in 1:size(solution, 1)
+        for j in 1:size(solution, 2)
+            for k in 1:size(solution, 3)
+                if solution[i,j,k] == 1
+                    inst.grid[i,j] = k
+                end
+            end
+        end
+    end
+
+    isFeasible = primal_status(model) == MOI.FEASIBLE_POINT
+    elapsedTime = time() - startTime
+
+    return isFeasible, x, elapsedTime
 end
 
 """
