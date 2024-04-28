@@ -11,48 +11,34 @@ Read an instance from an input file
 inputFile: path of the input file
 """
 function readInputFile(inputFile::String)
-
     # Open the input file
     datafile = open(inputFile)
 
+    # Read content
     data = readlines(datafile)
     close(datafile)
-    
-    n = length(split(data[1], ","))
-    t = zeros(String, n, n)
 
-    lineNb = 1
+    # Extract vampire, zombie and ghost values
+    creatures = parse.(Int, split(data[1], " "))
 
-    # For each line of the input file
-    for line in data
-        # Read line
-        lineSplit = split(line, ",")
+    # Extract grid data
+    grid_data = data[2:end]
 
-        # Check if the line has the correct number of values
-        if length(lineSplit) == n
-            for colNb in 1:n
-                # Take value
-                element = lineSplit[colNb]
+    # Determine grid size and initiliaze
+    n = length(split(grid_data[1], " "))
+    t = Array{String}(undef, n, n)
 
-                # Convert non-empty values to integers
-                if element == " "
-                    t[lineNb, colNb] = "0"
-                elseif element != "/" && element != "\\"
-                    t[lineNb, colNb] = parse(Int64, element)
-                else
-                    t[lineNb, colNb] = element
-                end
-            end
-        else
-            error("Invalid input file format: Line $lineNb has incorrect number of values")
-        end 
-        
-        lineNb += 1
+    # Parse grid data
+    for (i, line) in enumerate(grid_data)
+        lineSplit = split(line, " ")
+        for (j, element) in enumerate(lineSplit)
+            t[i, j] = element
+        end
     end
 
-    return t
-
+    return t, creatures
 end
+
 
 
 """
