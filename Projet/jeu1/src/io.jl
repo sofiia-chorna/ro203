@@ -63,6 +63,7 @@ function readInputFile(inputFile::String)
 end
 
 function displayGrid(instance::UndeadProblem)
+    println("--------Undead : Grid--------")
     println("Ghosts : ", instance.totalGhosts)
     println("Vampires : ", instance.totalVampires)
     println("Zombies : ", instance.totalZombies)
@@ -71,8 +72,9 @@ function displayGrid(instance::UndeadProblem)
     N = instance.dimensions
     X = instance.grid
     Y = instance.visibleMonsters
-    
+
     # Print values of paths beginning on the top
+    print(" ")
     for i in 1:N[2]
         print(" ", Y[i])
     end
@@ -112,6 +114,84 @@ function displayGrid(instance::UndeadProblem)
     end
     println("")
 end
+
+function displaySolution(instance::UndeadProblem, x::Array{Int64, 3}, log::IO=stdout)
+    println(log, "###########################################################")
+    println(log, "                   Game Undead : Solution")
+    println(log, "###########################################################")
+    println(log, "")
+
+    # Print total numbers of monsters
+    println(log, "Ghosts : ", instance.totalGhosts)
+    println(log, "Vampires : ", instance.totalVampires)
+    println(log, "Zombies : ", instance.totalZombies)
+
+    println(log, "")
+    print(log, " ")
+    rows, cols = instance.dimensions
+    N = 2 * (rows + cols)
+
+    # Define a function to get the value of path
+    get_path_value(i) = instance.paths[i][end][3] == 1 ? "/" : "\\"  
+
+    # Define a function to get the character representation of monsters
+    get_monster_char(i, j) = begin
+        if instance.grid[i, j] == 1
+            "G"
+        elseif instance.grid[i, j] == 2
+            "Z"
+        elseif instance.grid[i, j] == 3
+            "V"
+        elseif instance.grid[i, j] == 4
+            "/"
+        elseif instance.grid[i, j] == 5
+            "\\"
+        else
+            " "
+        end
+    end
+
+    # Print values of paths beginning on the top
+    for i in 1:cols
+        print(log, " ")
+        print(log, get_path_value(i))
+    end
+    println(log, "")
+
+    for i in 1:rows
+        path_index = cols + i
+        print(log, get_path_value(path_index)) # Print value of path beginning on the left
+        # Print line of grid
+        for j in 1:cols
+            print(log, " ")
+            for k in 1:3
+                if x[i, j, k] == 1
+                    print(log, "G")
+                elseif x[i, j, k] == 2
+                    print(log, "Z")
+                elseif x[i, j, k] == 3
+                    print(log, "V")
+                else
+                    print(log, get_monster_char(i, j))
+                end
+            end
+        end
+        print(log, " ")
+        path_index = cols + rows + i
+        print(log, get_path_value(path_index)) # Print value of path beginning on the right
+        println(log, "")
+    end
+
+    # Print values of paths beginning from the bottom
+    print(log, " ")
+    for i in 1:cols
+        print(log, " ")
+        path_index = N - i + 1
+        print(log, get_path_value(path_index))
+    end
+    println(log, "")
+end
+
 
 
 """
