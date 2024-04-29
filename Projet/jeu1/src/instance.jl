@@ -25,3 +25,14 @@ struct UndeadProblem
     paths::Vector{Vector{Vector{Int64}}}
     visibleMonsters::Array{Int64}
 end
+
+function UndeadProblem(instance::UndeadProblem)
+    N = copy(instance.dimensions)
+    X = copy(instance.grid)
+    Z = instance.totalZombies
+    G = instance.totalGhosts
+    V = instance.totalVampires
+    C = copy(instance.paths)
+    Y = copy(instance.visibleMonsters)
+    return UndeadProblem(N, X, Z, G, V, C, Y)
+end
