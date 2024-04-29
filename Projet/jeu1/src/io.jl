@@ -115,7 +115,7 @@ function displayGrid(instance::UndeadProblem)
     println("")
 end
 
-function displaySolution(instance, log = stdout)
+function displaySolution(instance)
     println("--------Undead : Solution--------")
     println("Ghosts : ", instance.totalGhosts)
     println("Vampires : ", instance.totalVampires)
@@ -127,49 +127,50 @@ function displaySolution(instance, log = stdout)
     Y = instance.visibleMonsters
 
     # Print values of paths beginning on the top
-    print(log, " ")
+    print(" ")
     for i in 1:N[2]
-        print(log, " ")
-        print(log, Y[i])
+        print(" ")
+        print(Y[i])
     end
-    println(log, "")
+
+    println("")
     for i in 1:N[1]
         indice = 2 * (N[1] + N[2]) - i + 1
 
         # Print value of path beginning on the left
-        print(log, Y[indice])
+        print(Y[indice])
 
         # Print line of grid
         for j in 1:N[2]
-            print(log, " ")
+            print(" ")
             if X[i,j] == 1
-                print(log, "G")
+                print("G")
             elseif X[i,j] == 2
-                print(log, "Z")
+                print("Z")
             elseif X[i,j] == 3
-                print(log, "V")
+                print("V")
             elseif X[i,j] == 4
-                print(log, "/")
+                print("/")
             elseif X[i,j] == 5
-                print(log, "\\")
+                print("\\")
             else
-                print(log, " ")
+                print(" ")
             end
         end
 
         # Print value of path beginning on the right
-        print(log, " ")
-        println(log, Y[N[2] + i])
+        print(" ")
+        println(Y[N[2] + i])
     end
 
     # Print values of paths beginning from the bottom
-    print(log, " ")
+    print(" ")
     for i in 1:N[2]
-        print(log, " ")
+        print(" ")
         ind = N[1] + 2 * N[2] - i + 1
-        print(log, Y[ind])
+        print(Y[ind])
     end
-    println(log, "")
+    println("")
 end
 
 function writeToFile(isSolution::Bool, prob::UndeadProblem, file::IOStream)
