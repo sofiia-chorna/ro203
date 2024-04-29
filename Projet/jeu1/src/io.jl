@@ -192,6 +192,61 @@ function displaySolution(instance::UndeadProblem, x::Array{Int64, 3}, log::IO=st
     println(log, "")
 end
 
+function writeToFile(isSolution::Bool, prob::UndeadProblem, file::IOStream)
+    # Write dimensions
+    write(file, "# Dimensions:")
+    write(file, "\n")
+    write(file, string(prob.dimensions[1]), ",", string(prob.dimensions[2]))
+    write(file, "\n")
+
+    # Write totals of monsters
+    write(file, "# Totals of monsters:")
+    write(file, "\n")
+    write(file, "G=", string(prob.totalGhosts))
+    write(file, "\n")
+    write(file, "V=", string(prob.totalVampires))
+    write(file, "\n")
+    write(file, "Z=", string(prob.totalZombies))
+    write(file, "\n")
+
+    # Write grid layout
+    write(file, "# Grid layout:")
+    write(file, "\n")
+    for i in 1:prob.dimensions[1]
+        for j in 1:prob.dimensions[2]
+            if prob.grid[i, j] == 0
+                write(file, "-")
+            elseif prob.grid[i, j] == 4
+                write(file, "\\")
+            elseif prob.grid[i, j] == 5
+                write(file, "/")
+            else
+                if isSolution
+                    if prob.grid[i, j] == 1
+                        write(file, "G")
+                    elseif prob.grid[i, j] == 2
+                        write(file, "Z")
+                    elseif prob.grid[i, j] == 3
+                        write(file, "V")
+                    end
+                else
+                    write(file, "-")
+                end
+            end
+        end
+        write(file, "\n")
+    end
+
+    # Write path
+    write(file, "# Path")
+    write(file, "\n")
+    for val in prob.visibleMonsters[1:end-1]
+        write(file, string(val), ",")
+    end
+    write(file, string(prob.visibleMonsters[end]), "\n")
+end
+
+
 
 
 """

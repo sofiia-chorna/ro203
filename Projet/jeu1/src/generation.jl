@@ -71,6 +71,7 @@ Arguments :
 Remark: a grid is generated only if the corresponding output file does not already exist
 """
 function generateDataSet()
+
     # For each grid size considered
     for size in [4, 9, 16, 25]
         N = [size,size]
@@ -78,7 +79,6 @@ function generateDataSet()
         for instance in 1:10
             # Saving the instance to solve and its solution
             fileName = "../data/instance_n" * string(size) * "_" * string(instance) * ".txt"
-            fileNameSol = "../dataSol/instance_n" * string(size) * "_" * string(instance) * "_sol.txt"
 
             if !isfile(fileName)
                 game = generateInstance(N)
@@ -86,14 +86,12 @@ function generateDataSet()
                 println("-- Generating file " * fileName)
                 writeToFile(false, game, file)
                 close(file)
-
-                if !isfile(fileNameSol)
-                    fileSol = open(fileNameSol, "w")
-                    println("-- Generating file " * fileNameSol)
-                    writeToFile(true, game, fileSol)
-                    close(fileSol)
-                end
             end
         end
+
     end
 end
+
+
+
+
