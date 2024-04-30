@@ -7,6 +7,34 @@ import GR
 include("instance.jl")
 include("path.jl")
 
+# Enumeration of the possible values of the grid
+HYPHEN = 0
+GHOST = 1
+ZOMBIE = 2
+VAMPIRE = 3
+SLASH = 4
+BACKSLASH = 5
+
+function parseValue(value, allowUnknown=false)
+    if value == HYPHEN
+        return "-"
+    elseif value == GHOST
+        return "G"
+    elseif value == ZOMBIE
+        return "Z"
+    elseif value == VAMPIRE
+        return "V"
+    elseif value == BACKSLASH
+        return "\\"
+    elseif value == SLASH
+        return "/"
+    elseif allowUnknown
+        return " "
+    else
+        print("Unknown value : ", value, "!")
+    end
+end
+
 """
 Read an instance from an input file
 
@@ -35,7 +63,7 @@ function readInputFile(inputFile::String)
     totalZombies = parseMonsters(data[4])
 
     # Parse grid layout
-    gridLayout = zeros(Int, rows, columns)
+    grid = zeros(Int, rows, columns)
     for i in 1:rows
         line = data[i + 4]
         if length(line) != columns
@@ -43,9 +71,9 @@ function readInputFile(inputFile::String)
         end
         for j in 1:columns
             if line[j] == '/'
-                gridLayout[i, j] = 4
+                grid[i, j] = SLASH
             elseif line[j] == '\\'
-                gridLayout[i, j] = 5
+                grid[i, j] = BACKSLASH
             end
         end
     end
@@ -57,174 +85,112 @@ function readInputFile(inputFile::String)
     end
 
     # Create paths of light in the grid
-    paths = createPath(dimensions, gridLayout)
+    paths = createPath(dimensions, grid)
 
-    return UndeadProblem(dimensions, gridLayout, totalZombies, totalGhosts, totalVampires, paths, pathValues)
+    # Return instance of the problem
+    return UndeadProblem(dimensions, grid, totalZombies, totalGhosts, totalVampires, paths, pathValues)
+end
+
+function display(instance::UndeadProblem, title::String="", solution::Bool=false)
+    println("-------- ", title, " --------")
+    println("Ghosts : ", instance.totalGhosts)
+    println("Vampires : ", instance.totalVampires)
+    println("Zombies : ", instance.totalZombies)
+    println("")
+
+    rows, cols = instance.dimensions
+
+    # Print values of paths beginning on the top
+    print(" ")
+    for i in 1:cols
+        print(" ")
+        print(instance.visibleMonsters[i])
+    end
+
+    println("")
+    for i in 1:rows
+        # Calculate index
+        index = 2 * (rows + cols) - i + 1
+
+        # Print value of path beginning on the left
+        print(instance.visibleMonsters[index])
+
+        # Print line of grid
+        for j in 1:cols
+            print(" ")
+
+            # Get value from number
+            value = parseValue(instance.grid[i,j], true)
+
+            # Display it
+            print(value)
+        end
+
+        # Print value of path beginning on the right
+        print(" ")
+        println(instance.visibleMonsters[cols + i])
+    end
+
+    # Print values of paths beginning from the bottom
+    print(" ")
+    for i in 1:cols
+        print(" ")
+        index = rows + 2 * cols - i + 1
+        print(instance.visibleMonsters[index])
+    end
+    println("")
 end
 
 function displayGrid(instance::UndeadProblem)
-    println("--------Undead : Grid--------")
-    println("Ghosts : ", instance.totalGhosts)
-    println("Vampires : ", instance.totalVampires)
-    println("Zombies : ", instance.totalZombies)
-    println("")
-
-    N = instance.dimensions
-    X = instance.grid
-    Y = instance.visibleMonsters
-
-    # Print values of paths beginning on the top
-    print(" ")
-    for i in 1:N[2]
-        print(" ", Y[i])
-    end
-
-    println("")
-
-    for i in 1:N[1]
-        indice = 2 * (N[1] + N[2]) - i + 1
-
-        # Print value of path beginning on the left
-        print(Y[indice])
-
-        # Print line of grid
-        for j in 1:N[2]
-            print(" ")
-            if X[i, j] == 4
-                print("/")
-            elseif X[i, j] == 5
-                print("\\")
-            else
-                print(" ")
-            end
-        end
-
-        print(" ")
-
-        # Print value of path beginning on the right
-        println(Y[N[2] + i])
-    end
-
-    # Print values of paths beginning from the bottom
-    print(" ")
-    for i in 1:N[2]
-        print(" ")
-        ind = N[1] + 2 * N[2] - i + 1
-        print(Y[ind])
-    end
-    println("")
+    title = "Undead : Grid"
+    display(instance, title, false)
 end
 
 function displaySolution(instance)
-    println("--------Undead : Solution--------")
-    println("Ghosts : ", instance.totalGhosts)
-    println("Vampires : ", instance.totalVampires)
-    println("Zombies : ", instance.totalZombies)
-    println("")
-
-    N = instance.dimensions
-    X = instance.grid
-    Y = instance.visibleMonsters
-
-    # Print values of paths beginning on the top
-    print(" ")
-    for i in 1:N[2]
-        print(" ")
-        print(Y[i])
-    end
-
-    println("")
-    for i in 1:N[1]
-        indice = 2 * (N[1] + N[2]) - i + 1
-
-        # Print value of path beginning on the left
-        print(Y[indice])
-
-        # Print line of grid
-        for j in 1:N[2]
-            print(" ")
-            if X[i,j] == 1
-                print("G")
-            elseif X[i,j] == 2
-                print("Z")
-            elseif X[i,j] == 3
-                print("V")
-            elseif X[i,j] == 4
-                print("/")
-            elseif X[i,j] == 5
-                print("\\")
-            else
-                print(" ")
-            end
-        end
-
-        # Print value of path beginning on the right
-        print(" ")
-        println(Y[N[2] + i])
-    end
-
-    # Print values of paths beginning from the bottom
-    print(" ")
-    for i in 1:N[2]
-        print(" ")
-        ind = N[1] + 2 * N[2] - i + 1
-        print(Y[ind])
-    end
-    println("")
+    title = "Undead : Solution"
+    display(instance, title, true)
 end
 
-function writeToFile(isSolution::Bool, prob::UndeadProblem, file::IOStream)
+function writeToFile(isSolution::Bool, instance::UndeadProblem, file::IOStream)
+    # Get dimensions
+    rows, cols = instance.dimensions
+
     # Write dimensions
-    write(file, "# Dimensions:")
-    write(file, "\n")
-    write(file, string(prob.dimensions[1]), ",", string(prob.dimensions[2]))
-    write(file, "\n")
+    write(file, "# Dimensions:", "\n")
+    write(file, string(rows), ",", string(cols), "\n")
 
     # Write totals of monsters
-    write(file, "# Totals of monsters:")
-    write(file, "\n")
-    write(file, "G=", string(prob.totalGhosts))
-    write(file, "\n")
-    write(file, "V=", string(prob.totalVampires))
-    write(file, "\n")
-    write(file, "Z=", string(prob.totalZombies))
-    write(file, "\n")
+    write(file, "# Totals of monsters:", "\n")
+
+    # Define map to iterate in its values
+    dict = Dict("G" => instance.totalGhosts, "V" => instance.totalVampires, "Z" => instance.totalZombies)
+
+    # Iterate over the pairs and write them to file
+    for (key, value) in dict
+        write(file, key, "=", string(value))
+        write(file, "\n")
+    end
 
     # Write grid layout
     write(file, "# Grid layout:")
     write(file, "\n")
-    for i in 1:prob.dimensions[1]
-        for j in 1:prob.dimensions[2]
-            if prob.grid[i, j] == 0
-                write(file, "-")
-            elseif prob.grid[i, j] == 4
-                write(file, "\\")
-            elseif prob.grid[i, j] == 5
-                write(file, "/")
-            else
-                if isSolution
-                    if prob.grid[i, j] == 1
-                        write(file, "G")
-                    elseif prob.grid[i, j] == 2
-                        write(file, "Z")
-                    elseif prob.grid[i, j] == 3
-                        write(file, "V")
-                    end
-                else
-                    write(file, "-")
-                end
-            end
+    for i in 1:rows
+        for j in 1:cols
+            # Get current cell
+            cell = instance.grid[i, j]
+
+            # Write to the file parsed value
+            write(file, parseValue(cell))
         end
         write(file, "\n")
     end
 
     # Write path
-    write(file, "# Path")
-    write(file, "\n")
-    for val in prob.visibleMonsters[1:end-1]
-        write(file, string(val), ",")
+    write(file, "# Path", "\n")
+    for v in instance.visibleMonsters[1:end-1]
+        write(file, string(v), ",")
     end
-    write(file, string(prob.visibleMonsters[end]), "\n")
+    write(file, string(instance.visibleMonsters[end]), "\n")
 end
 
 
