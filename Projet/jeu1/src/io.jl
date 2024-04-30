@@ -100,43 +100,46 @@ function display(instance::UndeadProblem, title::String="", solution::Bool=false
 
     rows, cols = instance.dimensions
 
+    # Calculate the length of the line based on symbol width
+    symbolWidth = 2
+    lineLength = 2 * (4 + cols * symbolWidth)
+
     # Print values of paths beginning on the top
-    print(" ")
+    print("    ")
     for i in 1:cols
         print(" ")
-        print(instance.visibleMonsters[i])
+        print(rpad(instance.visibleMonsters[i], symbolWidth + 1))
     end
 
     println("")
+    printLine(lineLength)
+
     for i in 1:rows
         # Calculate index
         index = 2 * (rows + cols) - i + 1
 
         # Print value of path beginning on the left
-        print(instance.visibleMonsters[index])
+        print(rpad(instance.visibleMonsters[index], symbolWidth), " | ")
 
         # Print line of grid
         for j in 1:cols
-            print(" ")
-
-            # Get value from number
             value = parseValue(instance.grid[i,j], true)
-
-            # Display it
-            print(value)
+            print(rpad(value, symbolWidth + 2))
         end
 
         # Print value of path beginning on the right
-        print(" ")
-        println(instance.visibleMonsters[cols + i])
+        print("| ", lpad(instance.visibleMonsters[cols + i], symbolWidth))
+        println()
     end
 
+    printLine(lineLength)
+
     # Print values of paths beginning from the bottom
-    print(" ")
+    print("    ")
     for i in 1:cols
         print(" ")
         index = rows + 2 * cols - i + 1
-        print(instance.visibleMonsters[index])
+        print(rpad(instance.visibleMonsters[index], symbolWidth + 1))
     end
     println("")
 end
