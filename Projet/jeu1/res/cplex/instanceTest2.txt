@@ -11,5 +11,5 @@ V\Z/
 GG/Z
 # Path
 0,4,4,0,3,2,1,1,1,1,0,1,2,2,1,3
-solveTime = 0.02500295639038086
+solveTime = 0.03239107131958008
 isOptimal = true

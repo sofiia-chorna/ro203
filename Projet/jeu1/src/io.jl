@@ -6,14 +6,8 @@ import GR
 
 include("instance.jl")
 include("path.jl")
+include("constants.jl")
 
-# Enumeration of the possible values of the grid
-HYPHEN = 0
-GHOST = 1
-ZOMBIE = 2
-VAMPIRE = 3
-SLASH = 4
-BACKSLASH = 5
 
 function parseValue(value, allowUnknown=false)
     if value == HYPHEN
@@ -105,7 +99,7 @@ function display(instance::UndeadProblem, title::String="", solution::Bool=false
     lineLength = 2 * (4 + cols * symbolWidth)
 
     # Print values of paths beginning on the top
-    print("    ")
+    print("   ")
     for i in 1:cols
         print(" ")
         print(rpad(instance.visibleMonsters[i], symbolWidth + 1))
@@ -119,7 +113,7 @@ function display(instance::UndeadProblem, title::String="", solution::Bool=false
         index = 2 * (rows + cols) - i + 1
 
         # Print value of path beginning on the left
-        print(rpad(instance.visibleMonsters[index], symbolWidth), " | ")
+        print(rpad(instance.visibleMonsters[index], symbolWidth), "| ")
 
         # Print line of grid
         for j in 1:cols
@@ -128,18 +122,25 @@ function display(instance::UndeadProblem, title::String="", solution::Bool=false
         end
 
         # Print value of path beginning on the right
-        print("| ", lpad(instance.visibleMonsters[cols + i], symbolWidth))
+        print("| ", lpad(instance.visibleMonsters[cols + i], symbolWidth - 1))
         println()
     end
 
     printLine(lineLength)
 
     # Print values of paths beginning from the bottom
-    print("    ")
+    print("   ")
     for i in 1:cols
         print(" ")
         index = rows + 2 * cols - i + 1
         print(rpad(instance.visibleMonsters[index], symbolWidth + 1))
+    end
+    println("")
+end
+
+function printLine(size::Int)
+    for i in 1:size
+        print("-")
     end
     println("")
 end

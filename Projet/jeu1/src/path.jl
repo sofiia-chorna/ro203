@@ -29,39 +29,41 @@ function moveNextCell(direction::String, cell::Cell)
     return Cell(cell.x + dx, cell.y + dy, cell.mirror)
 end
 
-function createPath(dimensions::Array{Int64}, gridLayout::Matrix{Int64})
+function createPath(dimensions::Array{Int64}, grid::Matrix{Int64})
+    rows, cols = dimensions
+
     # Initialize an array to store all paths
     paths = Vector{Vector{Vector{Int64}}}() 
 
     # Iterate over each possible starting point for the light beam
-    for i in 1:(2 * (dimensions[1] + dimensions[2]))
+    for i in 1:(2 * (rows + cols))
         path = Vector{Vector{Int64}}()
         
         # Determine the starting position and direction based on the current iteration
-        if i <= dimensions[2]
+        if i <= cols
             direction = "down"
             x, y = 1, i
-        elseif i <= dimensions[1] + dimensions[2]
+        elseif i <= rows + cols
             direction = "left"
-            x, y = i - dimensions[2], dimensions[2]
-        elseif i <= 2 * dimensions[2] + dimensions[1]
+            x, y = i - cols, cols
+        elseif i <= 2 * cols + rows
             direction = "up"
-            x, y = dimensions[1], 2 * dimensions[2] + dimensions[1] + 1 - i
+            x, y = rows, 2 * cols + rows + 1 - i
         else
             direction = "right"
-            x, y = 2 * dimensions[2] + 2 * dimensions[1] + 1 - i, 1
+            x, y = 2 * cols + 2 * rows + 1 - i, 1
         end
-        
+
         mirror = true
-        
+
         # Continue moving the light until it goes out of bounds
         while !isOutOfBounds(Cell(x, y, false), dimensions)
             # If there is a mirror
-            if gridLayout[x, y] in (4, 5)
+            if grid[x, y] in (4, 5)
                 mirror = false
 
                 # Change direction accordingly
-                direction = changeDirection(direction, gridLayout[x, y])
+                direction = changeDirection(direction, grid[x, y])
             else
                 # Add the current cell to the path
                 push!(path, [x, y, mirror])

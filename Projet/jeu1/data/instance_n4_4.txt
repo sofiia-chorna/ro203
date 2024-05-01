@@ -1,0 +1,13 @@
+# Dimensions:
+4,4
+# Totals of monsters:
+Z=6
+V=4
+G=5
+# Grid layout:
+GZVZ
+ZZGG
+ZVGZ
+VVG\
+# Path
+3,4,1,2,3,2,3,3,1,1,4,3,2,3,2,3

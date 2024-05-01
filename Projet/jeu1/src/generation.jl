@@ -1,5 +1,6 @@
 # This file contains methods to generate a data set of instances (i.e., sudoku grids)
 include("io.jl")
+include("constants.jl")
 using Random
 
 """
@@ -9,31 +10,33 @@ Argument
 - N: size of the grid (tuple of 2 dimensions)
 """
 function generateInstance(N::Array{Int64})
+    rows, cols = N
+
     # Array that will contain the generated grid
-    X = zeros(Int, N[1], N[2])
+    X = zeros(Int, rows, cols)
 
     # Counting the total number of monsters at the same time
     G = 0
     V = 0
     Z = 0
-    for i in 1:N[1]
-        for j in 1:N[2]
+    for i in 1:rows
+        for j in 1:cols
             # Choosing randomly the type of the cell (mirror, monster)
             mirror = rand()
             if mirror < 1 / 5 # probability of having a mirror
                 if rand() < 1 / 2
-                    X[i,j] = 4
+                    X[i,j] = SLASH
                 else
-                    X[i,j] = 5
+                    X[i,j] = BACKSLASH
                 end
             else
-                type = rand((1, 2, 3))
+                type = rand((GHOST, ZOMBIE, VAMPIRE))
                 X[i,j] = type
-                if type == 1
+                if type == GHOST
                     G += 1
-                elseif type == 2
+                elseif type == ZOMBIE
                     Z += 1
-                elseif type == 3
+                elseif type == VAMPIRE
                     V += 1
                 end
             end
@@ -42,8 +45,8 @@ function generateInstance(N::Array{Int64})
     C = createPath(N, X)
 
     # Array that contains the values of each path
-    Y = zeros(Int, 2 * (N[1] + N[2]))
-    for c in 1:2 * (N[1] + N[2])
+    Y = zeros(Int, 2 * (rows + cols))
+    for c in 1:2 * (rows + cols)
         path = C[c]
         for i in 1:size(path, 1)
             cell = path[i]
