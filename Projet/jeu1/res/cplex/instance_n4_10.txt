@@ -1,0 +1,15 @@
+# Dimensions:
+4,4
+# Totals of monsters:
+Z=4
+V=3
+G=4
+# Grid layout:
+Z/VZ
+Z/ZG
+V\GG
+V/G/
+# Path
+4,1,2,2,3,3,2,0,0,2,4,4,1,1,2,1
+solveTime = 0.022990942001342773
+isOptimal = true

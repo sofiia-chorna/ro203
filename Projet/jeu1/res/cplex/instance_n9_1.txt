@@ -1,0 +1,20 @@
+# Dimensions:
+9,9
+# Totals of monsters:
+Z=20
+V=16
+G=26
+# Grid layout:
+ZVZZZVGZ/
+\ZZ/GV/VZ
+\GGGGZ\ZG
+GG/G\GG\Z
+/GGG/VG\G
+ZZ/ZGVG//
+ZGGZV\V/G
+VVZVVGVVV
+ZVGGZ/\ZG
+# Path
+4,5,4,4,4,9,7,4,6,6,4,2,3,5,2,1,8,9,1,3,0,0,10,5,7,5,11,8,8,8,10,1,3,1,10,7
+solveTime = 0.6139159202575684
+isOptimal = true
