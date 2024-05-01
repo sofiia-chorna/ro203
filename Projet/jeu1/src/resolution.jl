@@ -3,6 +3,7 @@ using CPLEX, JuMP
 using MathOptInterface
 
 include("generation.jl")
+include("constants.jl")
 
 TOL = 0.00001
 
@@ -18,7 +19,7 @@ Return
 - getsolvetime(m): resolution time in seconds
 """
 function cplexSolve(inst::UndeadProblem)
-    N = inst.dimensions
+    rows, cols = inst.dimensions
     Z = inst.totalZombies
     G = inst.totalGhosts
     V = inst.totalVampires
@@ -29,31 +30,33 @@ function cplexSolve(inst::UndeadProblem)
     m = Model(CPLEX.Optimizer)
 
     # Declare the variable
-    @variable(m, x[1:N[1], 1:N[2], 1:5], Bin)
+    @variable(m, x[1:rows, 1:cols, 1:5], Bin)
 
     # Declare the constraints
     ## Constraint on mirrors place on the grid
-    for i in 1:N[1]
-        for j in 1:N[2]
-            if inst.grid[i,j] == 4 || inst.grid[i,j] == 5
+    for i in 1:rows
+        for j in 1:cols
+            if inst.grid[i,j] == SLASH || inst.grid[i,j] == BACKSLASH
                 @constraint(m, x[i,j,inst.grid[i,j]] == 1)
             end
         end
     end
 
-    ## Constraint on unicity of the type of box
-    @constraint(m, [i = 1:N[1], j = 1:N[2]], sum(x[i,j,k] for k in 1:5) == 1)
+    # Constraint on unicity of the type of box
+    @constraint(m, [i = 1:rows, j = 1:cols], sum(x[i,j,k] for k in 1:5) == 1)
 
-    ## Constraint on number of monsters per type
-    @constraint(m, sum(x[i,j, 1] for i = 1:N[1], j = 1:N[2]) == G)
-    @constraint(m, sum(x[i,j, 2] for i = 1:N[1], j = 1:N[2]) == Z)
-    @constraint(m, sum(x[i,j, 3] for i = 1:N[1], j = 1:N[2]) == V)
-    @constraint(m, [c = 1:size(C, 1)], 0
-        + sum(x[C[c][el][1], C[c][el][2], 2] for el in 1:size(C[c], 1)) # number of zombies on the path
-        + sum(x[C[c][el][1], C[c][el][2], 3] * C[c][el][3] for el in 1:size(C[c], 1)) # number of vampires on the path
-        + sum(x[C[c][el][1], C[c][el][2], 1] * (1 - C[c][el][3]) for el in 1:size(C[c], 1)) # number of ghosts on the path
-        == Y[c]
-    )
+    # Constraint on number of monsters per type
+    @constraint(m, sum(x[i,j, 1] for i = 1:rows, j = 1:cols) == G)
+    @constraint(m, sum(x[i,j, 2] for i = 1:rows, j = 1:cols) == Z)
+    @constraint(m, sum(x[i,j, 3] for i = 1:rows, j = 1:cols) == V)
+
+    # Constraint on number of monsters on each path
+    for c in 1:size(C, 1)
+        zombies = sum(x[C[c][el][1], C[c][el][2], ZOMBIE] for el in 1:size(C[c], 1))
+        vampires = sum(x[C[c][el][1], C[c][el][2], VAMPIRE] * C[c][el][3] for el in 1:size(C[c], 1))
+        ghosts = sum(x[C[c][el][1], C[c][el][2], GHOST] * (1 - C[c][el][3]) for el in 1:size(C[c], 1))
+        @constraint(m, zombies + vampires + ghosts == Y[c])
+    end
     
     # Start a chronometer
     start = time()
@@ -79,70 +82,6 @@ function cplexSolve(inst::UndeadProblem)
         return false, nothing, time() - start
     end
 end
-
-# function cplexSolve(inst::UndeadProblem)
-#     # Extract instance attributes
-#     N = inst.dimensions
-#     Z = inst.totalZombies
-#     G = inst.totalGhosts
-#     V = inst.totalVampires
-#     C = inst.paths
-#     visibleMonsters = inst.visibleMonsters
-
-#     # Create the model
-#     model = Model(CPLEX.Optimizer)
-
-#     # Declare the variable
-#     @variable(model, x[1:N[1], 1:N[2], 1:5], Bin)
-
-#     # Constraint on mirrors placed on the grid
-#     for i in 1:N[1]
-#         for j in 1:N[2]
-#             if inst.grid[i,j] == 4 || inst.grid[i,j] == 5
-#                 @constraint(model, x[i,j,inst.grid[i,j]] == 1)
-#             end
-#         end
-#     end
-
-#     # Constraint on the uniqueness of the type of box
-#     @constraint(model, [i = 1:N[1], j = 1:N[2]], sum(x[i,j,k] for k in 1:5) == 1)
-    
-#     # Constraint on the number of monsters per type
-#     @constraint(model, sum(x[i,j,1] for i = 1:N[1], j = 1:N[2]) == G)
-#     @constraint(model, sum(x[i,j,2] for i = 1:N[1], j = 1:N[2]) == Z)
-#     @constraint(model, sum(x[i,j,3] for i = 1:N[1], j = 1:N[2]) == V)
-
-#     # Constraint on the number of monsters per path
-#     for c in 1:size(C, 1)
-#         sumZombies = sum(x[C[c][el][1], C[c][el][2], 2] for el in 1:size(C[c], 1))
-#         sumVampires = sum(x[C[c][el][1], C[c][el][2], 3] * C[c][el][3] for el in 1:size(C[c], 1))
-#         sumGhosts = sum(x[C[c][el][1], C[c][el][2], 1] * (1 - C[c][el][3]) for el in 1:size(C[c], 1))
-#         @constraint(model, sumZombies + sumVampires + sumGhosts == visibleMonsters[c])
-#     end
-
-#     # Start a timer
-#     startTime = time()
-
-#     # Solve the model
-#     optimize!(model)
-    
-#     # Update the grid layout with the solution
-#     solution = JuMP.value.(x)
-#     for i in 1:size(solution, 1)
-#         for j in 1:size(solution, 2)
-#             for k in 1:size(solution, 3)
-#                 if solution[i,j,k] == 1
-#                     inst.grid[i,j] = k
-#                 end
-#             end
-#         end
-#     end
-
-#     isFeasible = primal_status(model) == MOI.FEASIBLE_POINT
-#     elapsedTime = time() - startTime
-
-#     return isFeasible, x, elapsedTime
-# end
 
 """
 Heuristically solve an instance
